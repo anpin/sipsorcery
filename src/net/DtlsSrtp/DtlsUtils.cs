@@ -65,6 +65,7 @@ using Org.BouncyCastle.Utilities.IO.Pem;
 using Org.BouncyCastle.X509;
 using SIPSorcery.Sys;
 using System.Runtime.CompilerServices;
+using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Tls.Crypto.Impl.BC;
 using Org.BouncyCastle.Tls.Crypto;
 
@@ -433,7 +434,7 @@ namespace SIPSorcery.Net
 
         public static (Org.BouncyCastle.X509.X509Certificate certificate, AsymmetricKeyParameter privateKey) CreateSelfSignedBouncyCastleCert()
         {
-            return CreateSelfSignedBouncyCastleCert("CN=localhost", "CN=root", null);
+            return CreateSelfSignedBouncyCastleCert("CN=WebRTC", "CN=WebRTC", null);
         }
 
         public static (Org.BouncyCastle.X509.X509Certificate certificate, AsymmetricKeyParameter privateKey) CreateSelfSignedBouncyCastleCert(string subjectName, string issuerName, AsymmetricKeyParameter issuerPrivateKey)
@@ -447,12 +448,12 @@ namespace SIPSorcery.Net
             // Generating Random Numbers
             var randomGenerator = new CryptoApiRandomGenerator();
             var random = new SecureRandom(randomGenerator);
-            ISignatureFactory signatureFactory = new Asn1SignatureFactory("SHA256WITHRSA", issuerPrivateKey, random);
+            ISignatureFactory signatureFactory = new Asn1SignatureFactory("SHA256withECDSA", issuerPrivateKey, random);
 
             // The Certificate Generator
             var certificateGenerator = new X509V3CertificateGenerator();
-            certificateGenerator.AddExtension(X509Extensions.SubjectAlternativeName, false, new GeneralNames(new GeneralName[] { new GeneralName(GeneralName.DnsName, "localhost"), new GeneralName(GeneralName.DnsName, "127.0.0.1") }));
-            certificateGenerator.AddExtension(X509Extensions.ExtendedKeyUsage, true, new ExtendedKeyUsage(new List<DerObjectIdentifier>() { new DerObjectIdentifier("1.3.6.1.5.5.7.3.1") }));
+            // certificateGenerator.AddExtension(X509Extensions.SubjectAlternativeName, false, new GeneralNames(new GeneralName[] { new GeneralName(GeneralName.DnsName, "localhost"), new GeneralName(GeneralName.DnsName, "127.0.0.1") }));
+            // certificateGenerator.AddExtension(X509Extensions.ExtendedKeyUsage, true, new ExtendedKeyUsage(new List<DerObjectIdentifier>() { new DerObjectIdentifier("1.3.6.1.5.5.7.3.1") }));
 
             // Serial Number
             var serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(Int64.MaxValue), random);
@@ -465,15 +466,20 @@ namespace SIPSorcery.Net
             certificateGenerator.SetSubjectDN(subjectDn);
 
             // Valid For
-            var notBefore = DateTime.UtcNow.Date;
+            var notBefore = DateTime.UtcNow.Date.AddDays(-1);
             var notAfter = notBefore.AddYears(70);
 
             certificateGenerator.SetNotBefore(notBefore);
             certificateGenerator.SetNotAfter(notAfter);
 
-            // Subject Public Key
-            var keyGenerationParameters = new KeyGenerationParameters(random, keyStrength);
-            var keyPairGenerator = new RsaKeyPairGenerator();
+            
+            // Generate EC key pair
+            const string curve = "secp256r1";
+            var ecSpec = ECNamedCurveTable.GetByName(curve);
+            var name = ECNamedCurveTable.GetOid(curve); // Get the correct OID for the curve
+            var dp = new ECNamedDomainParameters(name, ecSpec.Curve, ecSpec.G, ecSpec.N, ecSpec.H, ecSpec.GetSeed());
+            var keyGenerationParameters = new ECKeyGenerationParameters(dp, random);
+            var keyPairGenerator = new ECKeyPairGenerator();
             keyPairGenerator.Init(keyGenerationParameters);
             var subjectKeyPair = keyPairGenerator.GenerateKeyPair();
 
@@ -580,8 +586,24 @@ namespace SIPSorcery.Net
             //certificateGenerator.SetNotAfter(notAfter);
 
             // Subject Public Key
-            var keyGenerationParameters = new KeyGenerationParameters(random, keyStrength);
-            var keyPairGenerator = new RsaKeyPairGenerator();
+            // var keyGenerationParameters = new KeyGenerationParameters(random, keyStrength);
+            // var keyPairGenerator = new RsaKeyPairGenerator();
+            // keyPairGenerator.Init(keyGenerationParameters);
+            // var subjectKeyPair = keyPairGenerator.GenerateKeyPair();
+            //
+            // return subjectKeyPair.Private;
+            
+            // // Generate random numbers
+            // var randomGenerator = new CryptoApiRandomGenerator();
+            // var random = new SecureRandom(randomGenerator);
+
+            // Generate EC key pair
+            const string curve = "secp256r1";
+            var ecSpec = ECNamedCurveTable.GetByName(curve);
+            var name = ECNamedCurveTable.GetOid(curve); // Get the correct OID for the curve
+            var dp = new ECNamedDomainParameters(name, ecSpec.Curve, ecSpec.G, ecSpec.N, ecSpec.H, ecSpec.GetSeed());
+            var keyGenerationParameters = new ECKeyGenerationParameters(dp, random);
+            var keyPairGenerator = new ECKeyPairGenerator();
             keyPairGenerator.Init(keyGenerationParameters);
             var subjectKeyPair = keyPairGenerator.GenerateKeyPair();
 
