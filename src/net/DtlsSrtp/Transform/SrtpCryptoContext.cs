@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Filename: SrtpCrtpyoContext.cs
 //
 // Description: SrtpCryptoContext class is the core class of SRTP implementation. 
@@ -277,8 +277,6 @@ namespace SIPSorcery.Net
 
             masterSalt = new byte[policy.SaltKeyLength];
             System.Array.Copy(masterS, 0, masterSalt, 0, masterS.Length);
-
-            mac = new HMac(new Sha1Digest());
 
             switch (policy.EncType)
             {
