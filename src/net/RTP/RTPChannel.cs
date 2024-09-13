@@ -45,7 +45,7 @@ namespace SIPSorcery.Net
         /// MTU is 1452 bytes so this should be heaps.
         /// TODO: What about fragmented UDP packets that are put back together by the OS?
         /// </summary>
-        protected const int RECEIVE_BUFFER_SIZE = 2048;
+        protected const int RECEIVE_BUFFER_SIZE = 4096;
 
         protected static ILogger logger = Log.Logger;
 
