@@ -493,14 +493,12 @@ namespace SIPSorcery.Net
 
         public static (Org.BouncyCastle.Tls.Certificate certificate, AsymmetricKeyParameter privateKey) CreateSelfSignedTlsCert(TlsCrypto crypto)
         {
-            return CreateSelfSignedTlsCert(crypto, "CN=localhost", "CN=root", null);
+            return CreateSelfSignedTlsCert(crypto, "CN=WebRTC", "CN=WebRTC", null);
         }
 
         public static (Org.BouncyCastle.Tls.Certificate certificate, AsymmetricKeyParameter privateKey) CreateSelfSignedTlsCert(TlsCrypto crypto, string subjectName, string issuerName, AsymmetricKeyParameter issuerPrivateKey)
         {
-            var tuple = CreateSelfSignedBouncyCastleCert(subjectName, issuerName, issuerPrivateKey);
-            var certificate = tuple.certificate;
-            var privateKey = tuple.privateKey;
+            var (certificate, privateKey) = CreateSelfSignedBouncyCastleCert(subjectName, issuerName, issuerPrivateKey);
             var chain = new TlsCertificate[] { new BcTlsCertificate(crypto as BcTlsCrypto, X509CertificateStructure.GetInstance(certificate.GetEncoded())) };
             var tlsCertificate = new Org.BouncyCastle.Tls.Certificate(chain);
 
